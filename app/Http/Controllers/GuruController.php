@@ -98,4 +98,27 @@ class GuruController extends Controller
         return redirect()->route('guru.data-jurusan')
             ->with('success', 'Absensi berhasil disimpan untuk ' . count($request->absensi) . ' siswa!');
     }
-}
+
+    public function uploadBukti(Request $request, $id_absensi)
+    {
+        $request->validate([
+            'bukti_foto' => 'required|image|mimes:jpg,jpeg,png|max:2048',
+        ]);
+
+        $absensi = Absensi::findOrFail($id_absensi);
+
+        if ($absensi->bukti_foto) {
+            \Storage::disk('public')->delete($absensi->bukti_foto);
+        }
+
+        $path = $request->file('bukti_foto')->store('bukti-absensi', 'public');
+
+        $absensi->update(['bukti_foto' => $path]);
+
+        return response()->json([
+            'message' => 'Foto bukti berhasil diupload',
+            'path'    => $path,
+            'url'     => \Storage::url($path),
+        ]);
+    }
+    }

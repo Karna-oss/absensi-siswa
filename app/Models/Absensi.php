@@ -6,7 +6,7 @@ class Absensi extends Model
 {
     protected $table      = 'absensi';
     protected $primaryKey = 'id_absensi';
-    protected $fillable   = ['id_siswa','id_kelas','id_guru','tanggal','status','keterangan'];
+    protected $fillable   = ['id_siswa','id_kelas','id_guru','tanggal','status','keterangan','bukti_foto'];
     protected $casts      = ['tanggal' => 'date'];
 
     public function siswa() { return $this->belongsTo(Siswa::class, 'id_siswa'); }

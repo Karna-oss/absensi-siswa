@@ -53,6 +53,9 @@ Route::prefix('guru')->name('guru.')->middleware(['auth','role:guru'])->group(fu
     Route::get('/data-jurusan',        [GuruController::class, 'dataJurusan'])->name('data-jurusan');
     Route::get('/input-absensi',       [GuruController::class, 'inputAbsensi'])->name('input');
     Route::post('/input-absensi',      [GuruController::class, 'simpanAbsensi'])->name('simpan');
+
+    // Upload bukti foto absensi (dipindah ke sini, sebelumnya salah taruh di grup admin)
+    Route::post('/absensi/{id_absensi}/upload-bukti', [GuruController::class, 'uploadBukti'])->name('upload-bukti');
 });
 
 // ── SISWA ─────────────────────────────────────────────────
@@ -61,3 +64,7 @@ Route::prefix('siswa')->name('siswa.')->middleware(['auth','role:siswa'])->group
     Route::get('/riwayat',             [SiswaController::class, 'riwayat'])->name('riwayat');
     Route::get('/profil',              [SiswaController::class, 'profil'])->name('profil');
 });
+
+Route::get('/test-error', function () {
+    return 1 / 0;
+})->middleware('auth');

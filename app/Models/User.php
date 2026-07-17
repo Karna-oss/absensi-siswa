@@ -3,16 +3,16 @@ namespace App\Models;
 
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use Laravel\Sanctum\HasApiTokens;
 
 class User extends Authenticatable
 {
-    use Notifiable;
+    use Notifiable, HasApiTokens;
 
     protected $primaryKey = 'id_user';
     protected $fillable   = ['username', 'password', 'role'];
     protected $hidden     = ['password', 'remember_token'];
 
-    // Wajib: beritahu Laravel pakai kolom 'username' bukan 'email'
     public function getAuthIdentifierName(): string { return 'username'; }
 
     public function siswa() { return $this->hasOne(Siswa::class, 'id_user', 'id_user'); }
