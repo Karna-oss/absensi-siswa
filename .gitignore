@@ -1,4 +1,13 @@
-*.log
+/vendor
+/node_modules
+.env
+/storage/*.key
+/storage/framework/cache/*
+/storage/framework/sessions/*
+/storage/framework/views/*
+/storage/logs/*
+/public/storage
+database.sqlite*.log
 .DS_Store
 .env
 .env.backup
