@@ -16,20 +16,11 @@ services:
       dockerfile: Dockerfile.nginx
     expose:
       - "80"
-    ports:
-      - "8500:80"
     volumes:
       - .:/var/www
     depends_on:
       - app
     restart: unless-stopped
-    networks:
-      - default
-      - coolify
-    labels:
-      - "traefik.enable=true"
-      - "traefik.http.services.nginx-vzcan6yj5hcnil0xokqjqkjl.loadbalancer.server.port=80"
-      - "traefik.http.routers.http-0-vzcan6yj5hcnil0xokqjqkjl-nginx.service=nginx-vzcan6yj5hcnil0xokqjqkjl"
 
   db:
     image: mysql:8
@@ -37,14 +28,11 @@ services:
       MYSQL_DATABASE: ppp
       MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASSWORD}
       MYSQL_USER: ${DB_USERNAME}
+      MYSQL_PASSWORD: ${DB_PASSWORD}
     volumes:
       - db_data:/var/lib/mysql
     restart: unless-stopped
 
 volumes:
-  storage_data:
   db_data:
-
-networks:
-  coolify:
-    external: true
+  storage_data:
