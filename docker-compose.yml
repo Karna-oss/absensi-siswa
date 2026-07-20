@@ -10,7 +10,7 @@ services:
       - db
     restart: unless-stopped
 
-nginx:
+  nginx:
     build:
       context: ./docker
       dockerfile: Dockerfile.nginx
@@ -28,11 +28,10 @@ nginx:
       MYSQL_DATABASE: ppp
       MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASSWORD}
       MYSQL_USER: ${DB_USERNAME}
-      MYSQL_PASSWORD: ${DB_PASSWORD}
     volumes:
       - db_data:/var/lib/mysql
     restart: unless-stopped
 
 volumes:
-  db_data:
   storage_data:
+  db_data:
