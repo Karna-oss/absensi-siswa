@@ -26,6 +26,9 @@ services:
     networks:
       - default
       - coolify
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.services.nginx-vzcan6yj5hcnil0xokqjqkjl.loadbalancer.server.port=80"
 
   db:
     image: mysql:8
