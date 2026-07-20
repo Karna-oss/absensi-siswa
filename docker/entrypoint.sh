@@ -2,7 +2,7 @@
 set -e
 
 # Tunggu database siap nerima koneksi
-until php artisan db:show > /dev/null 2>&1; do
+until php artisan migrate:status > /dev/null 2>&1 || [ $? -eq 1 ]; do
   echo "Menunggu database siap..."
   sleep 2
 done
