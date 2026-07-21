@@ -1,23 +1,52 @@
 <?php
+
 namespace Database\Seeders;
 
 use Illuminate\Database\Seeder;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
-use App\Models\{User, Jurusan, Kelas, Guru, Siswa};
 
 class DatabaseSeeder extends Seeder
 {
+    /**
+     * Data awal Sistem Absensi Siswa.
+     * Password semua akun default: "password"
+     * (di-hash ulang lewat Hash::make supaya selalu valid, tidak bergantung
+     * pada hash bcrypt lama dari database_manual.sql)
+     */
     public function run(): void
     {
-        // ── ADMIN ─────────────────────────────────────────────────
-        User::create([
-            'username' => 'admin',
-            'password' => Hash::make('password'),
-            'role'     => 'admin',
-        ]);
+        $now = now();
+        $defaultPassword = Hash::make('password');
 
-        // ── 6 JURUSAN ─────────────────────────────────────────────
-        $jurusanData = [
+        // ── 1. USERS ─────────────────────────────────────────────
+        $users = [
+            ['username' => 'admin',        'role' => 'admin'],
+            ['username' => 'guru_andi',    'role' => 'guru'],
+            ['username' => 'guru_budi',    'role' => 'guru'],
+            ['username' => 'siswa_ahmad',  'role' => 'siswa'],
+            ['username' => 'siswa_bela',   'role' => 'siswa'],
+            ['username' => 'siswa_candra', 'role' => 'siswa'],
+            ['username' => 'siswa_dewi',   'role' => 'siswa'],
+            ['username' => 'siswa_eko',    'role' => 'siswa'],
+            ['username' => 'siswa_fitri',  'role' => 'siswa'],
+            ['username' => 'siswa_galih',  'role' => 'siswa'],
+            ['username' => 'siswa_hana',   'role' => 'siswa'],
+            ['username' => 'siswa_ivan',   'role' => 'siswa'],
+            ['username' => 'siswa_julia',  'role' => 'siswa'],
+        ];
+        foreach ($users as $u) {
+            DB::table('users')->insert([
+                'username'   => $u['username'],
+                'password'   => $defaultPassword,
+                'role'       => $u['role'],
+                'created_at' => $now,
+                'updated_at' => $now,
+            ]);
+        }
+
+        // ── 2. JURUSAN ───────────────────────────────────────────
+        $jurusan = [
             ['kode' => 'RPL', 'nama' => 'Rekayasa Perangkat Lunak'],
             ['kode' => 'TKJ', 'nama' => 'Teknik Komputer dan Jaringan'],
             ['kode' => 'MM',  'nama' => 'Multimedia'],
@@ -25,61 +54,77 @@ class DatabaseSeeder extends Seeder
             ['kode' => 'TKR', 'nama' => 'Teknik Kendaraan Ringan'],
             ['kode' => 'TSM', 'nama' => 'Teknik Sepeda Motor'],
         ];
-
-        $jurusanMap = [];
-        foreach ($jurusanData as $j) {
-            $jurusanMap[$j['kode']] = Jurusan::create($j);
+        foreach ($jurusan as $j) {
+            DB::table('jurusan')->insert([
+                'kode'       => $j['kode'],
+                'nama'       => $j['nama'],
+                'created_at' => $now,
+                'updated_at' => $now,
+            ]);
         }
 
-        // ── 2 KELAS PER JURUSAN (12 kelas total) ──────────────────
-        $kelasMap = [];
-        foreach ($jurusanMap as $kode => $jurusan) {
-            for ($i = 1; $i <= 2; $i++) {
-                $kelasMap["{$kode}_{$i}"] = Kelas::create([
-                    'id_jurusan' => $jurusan->id_jurusan,
-                    'nama_kelas' => "X {$kode} {$i}",
-                    'tingkat'    => 'X',
-                ]);
-            }
-        }
-
-        // ── 2 GURU (dengan NIP) ───────────────────────────────────
-        $uGuru1 = User::create(['username' => 'guru_andi', 'password' => Hash::make('password'), 'role' => 'guru']);
-        Guru::create(['nama' => 'Andi Susanto, S.Pd', 'nip' => '198501012010011001', 'id_user' => $uGuru1->id_user]);
-
-        $uGuru2 = User::create(['username' => 'guru_budi', 'password' => Hash::make('password'), 'role' => 'guru']);
-        Guru::create(['nama' => 'Budi Santoso, S.Kom', 'nip' => '198703022012011002', 'id_user' => $uGuru2->id_user]);
-
-        // ── SISWA CONTOH (tiap kelas RPL & TKJ) ──────────────────
-        $siswaData = [
-            ['nama' => 'Ahmad Fauzi',    'nis' => '2024001', 'kelas' => 'RPL_1', 'username' => 'siswa_ahmad'],
-            ['nama' => 'Bela Safitri',   'nis' => '2024002', 'kelas' => 'RPL_1', 'username' => 'siswa_bela'],
-            ['nama' => 'Candra Wijaya',  'nis' => '2024003', 'kelas' => 'RPL_1', 'username' => 'siswa_candra'],
-            ['nama' => 'Dewi Rahayu',    'nis' => '2024004', 'kelas' => 'RPL_2', 'username' => 'siswa_dewi'],
-            ['nama' => 'Eko Prasetyo',   'nis' => '2024005', 'kelas' => 'RPL_2', 'username' => 'siswa_eko'],
-            ['nama' => 'Fitri Amalia',   'nis' => '2024006', 'kelas' => 'TKJ_1', 'username' => 'siswa_fitri'],
-            ['nama' => 'Galih Pratama',  'nis' => '2024007', 'kelas' => 'TKJ_1', 'username' => 'siswa_galih'],
-            ['nama' => 'Hana Pertiwi',   'nis' => '2024008', 'kelas' => 'TKJ_2', 'username' => 'siswa_hana'],
-            ['nama' => 'Ivan Kurniawan', 'nis' => '2024009', 'kelas' => 'MM_1',  'username' => 'siswa_ivan'],
-            ['nama' => 'Julia Sari',     'nis' => '2024010', 'kelas' => 'MM_1',  'username' => 'siswa_julia'],
+        // ── 3. KELAS (id_jurusan mengikuti urutan insert di atas: 1..6) ──
+        $kelas = [
+            ['id_jurusan' => 1, 'nama_kelas' => 'X RPL 1', 'tingkat' => 'X'],
+            ['id_jurusan' => 1, 'nama_kelas' => 'X RPL 2', 'tingkat' => 'X'],
+            ['id_jurusan' => 2, 'nama_kelas' => 'X TKJ 1', 'tingkat' => 'X'],
+            ['id_jurusan' => 2, 'nama_kelas' => 'X TKJ 2', 'tingkat' => 'X'],
+            ['id_jurusan' => 3, 'nama_kelas' => 'X MM 1',  'tingkat' => 'X'],
+            ['id_jurusan' => 3, 'nama_kelas' => 'X MM 2',  'tingkat' => 'X'],
+            ['id_jurusan' => 4, 'nama_kelas' => 'X AK 1',  'tingkat' => 'X'],
+            ['id_jurusan' => 4, 'nama_kelas' => 'X AK 2',  'tingkat' => 'X'],
+            ['id_jurusan' => 5, 'nama_kelas' => 'X TKR 1', 'tingkat' => 'X'],
+            ['id_jurusan' => 5, 'nama_kelas' => 'X TKR 2', 'tingkat' => 'X'],
+            ['id_jurusan' => 6, 'nama_kelas' => 'X TSM 1', 'tingkat' => 'X'],
+            ['id_jurusan' => 6, 'nama_kelas' => 'X TSM 2', 'tingkat' => 'X'],
         ];
-
-        foreach ($siswaData as $s) {
-            $user = User::create([
-                'username' => $s['username'],
-                'password' => Hash::make('password'),
-                'role'     => 'siswa',
-            ]);
-            Siswa::create([
-                'nama'     => $s['nama'],
-                'nis'      => $s['nis'],
-                'id_kelas' => $kelasMap[$s['kelas']]->id_kelas,
-                'id_user'  => $user->id_user,
+        foreach ($kelas as $k) {
+            DB::table('kelas')->insert([
+                'id_jurusan' => $k['id_jurusan'],
+                'nama_kelas' => $k['nama_kelas'],
+                'tingkat'    => $k['tingkat'],
+                'created_at' => $now,
+                'updated_at' => $now,
             ]);
         }
 
-        $this->command->info('✓ Seeder selesai!');
-        $this->command->info('  6 Jurusan | 12 Kelas | 2 Guru | 10 Siswa');
-        $this->command->info('  Login: admin/password | guru_andi/password | siswa_ahmad/password');
+        // ── 4. GURU (id_user mengacu ke urutan users di atas: 2=guru_andi, 3=guru_budi) ──
+        $guru = [
+            ['nama' => 'Andi Susanto, S.Pd',  'nip' => '198501012010011001', 'id_user' => 2],
+            ['nama' => 'Budi Santoso, S.Kom', 'nip' => '198703022012011002', 'id_user' => 3],
+        ];
+        foreach ($guru as $g) {
+            DB::table('guru')->insert([
+                'nama'       => $g['nama'],
+                'nip'        => $g['nip'],
+                'id_user'    => $g['id_user'],
+                'created_at' => $now,
+                'updated_at' => $now,
+            ]);
+        }
+
+        // ── 5. SISWA (id_kelas & id_user mengacu ke urutan di atas) ──
+        $siswa = [
+            ['nama' => 'Ahmad Fauzi',    'nis' => '2024001', 'id_kelas' => 1, 'id_user' => 4],
+            ['nama' => 'Bela Safitri',   'nis' => '2024002', 'id_kelas' => 1, 'id_user' => 5],
+            ['nama' => 'Candra Wijaya',  'nis' => '2024003', 'id_kelas' => 1, 'id_user' => 6],
+            ['nama' => 'Dewi Rahayu',    'nis' => '2024004', 'id_kelas' => 2, 'id_user' => 7],
+            ['nama' => 'Eko Prasetyo',   'nis' => '2024005', 'id_kelas' => 2, 'id_user' => 8],
+            ['nama' => 'Fitri Amalia',   'nis' => '2024006', 'id_kelas' => 3, 'id_user' => 9],
+            ['nama' => 'Galih Pratama',  'nis' => '2024007', 'id_kelas' => 3, 'id_user' => 10],
+            ['nama' => 'Hana Pertiwi',   'nis' => '2024008', 'id_kelas' => 4, 'id_user' => 11],
+            ['nama' => 'Ivan Kurniawan', 'nis' => '2024009', 'id_kelas' => 5, 'id_user' => 12],
+            ['nama' => 'Julia Sari',     'nis' => '2024010', 'id_kelas' => 5, 'id_user' => 13],
+        ];
+        foreach ($siswa as $s) {
+            DB::table('siswa')->insert([
+                'nama'       => $s['nama'],
+                'nis'        => $s['nis'],
+                'id_kelas'   => $s['id_kelas'],
+                'id_user'    => $s['id_user'],
+                'created_at' => $now,
+                'updated_at' => $now,
+            ]);
+        }
     }
 }
