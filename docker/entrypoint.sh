@@ -22,6 +22,15 @@ try {
 done
 echo "==> Database siap."
 
+# Pastikan file .env ada. Di production (Coolify), .env tidak ikut masuk image
+# (karena di-gitignore) dan variabel di-inject sebagai OS environment variables,
+# bukan sebagai file fisik. Beberapa command artisan (misal key:generate) tetap
+# butuh file .env untuk ditulisi, jadi kita buat file kosong dulu kalau belum ada.
+if [ ! -f /var/www/.env ]; then
+  echo "==> File .env tidak ditemukan, membuat file .env kosong..."
+  touch /var/www/.env
+fi
+
 # Generate APP_KEY kalau belum ada (aman dijalankan berulang, tidak overwrite yang sudah ada)
 if [ -z "$APP_KEY" ]; then
   echo "==> APP_KEY kosong, generate baru..."
@@ -44,6 +53,3 @@ php artisan view:cache
 
 echo "==> Setup selesai, menjalankan proses utama..."
 exec "$@"
-
-
-
