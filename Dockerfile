@@ -1,21 +1,75 @@
-FROM php:8.3-fpm
+# =========================================================
+# Dockerfile - Laravel (absensi-siswa) untuk deploy di Coolify
+# Single image: PHP-FPM + Nginx + Supervisor jadi satu container
+# =========================================================
 
-RUN apt-get update && apt-get install -y \
-    git curl zip unzip libzip-dev libpng-dev libonig-dev libxml2-dev \
-    && docker-php-ext-install pdo_mysql zip gd mbstring xml
+# ---------- STAGE 1: build asset frontend (Vite) ----------
+FROM node:20-alpine AS node-build
+WORKDIR /app
+COPY package*.json ./
+RUN npm ci
+COPY . .
+RUN npm run build
 
-COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
+# ---------- STAGE 2: install dependency PHP (composer) ----------
+FROM composer:2 AS composer-build
+WORKDIR /app
+COPY database/ database/
+COPY composer.json composer.lock ./
+RUN composer install \
+    --no-dev \
+    --no-scripts \
+    --no-autoloader \
+    --ignore-platform-reqs
+
+COPY . .
+COPY --from=node-build /app/public/build ./public/build
+RUN composer dump-autoload --optimize --no-dev
+
+# ---------- STAGE 3: runtime image ----------
+FROM php:8.2-fpm-alpine
+
+# System dependencies + PHP extensions yang dipakai Laravel
+RUN apk add --no-cache \
+        nginx \
+        supervisor \
+        bash \
+        curl \
+        libpng-dev \
+        libjpeg-turbo-dev \
+        freetype-dev \
+        libzip-dev \
+        icu-dev \
+        oniguruma-dev \
+        mysql-client \
+    && docker-php-ext-configure gd --with-freetype --with-jpeg \
+    && docker-php-ext-install -j$(nproc) \
+        pdo_mysql \
+        mbstring \
+        exif \
+        pcntl \
+        bcmath \
+        gd \
+        zip \
+        intl \
+        opcache
 
 WORKDIR /var/www
 
-COPY . .
+# Salin hasil build dari stage composer (sudah termasuk vendor/ & public/build)
+COPY --from=composer-build /app ./
 
-RUN composer install --no-dev --optimize-autoloader --no-interaction
+# Konfigurasi Nginx, Supervisor, entrypoint
+COPY docker/nginx.conf /etc/nginx/http.d/default.conf
+COPY docker/supervisord.conf /etc/supervisor/conf.d/supervisord.conf
+COPY docker/entrypoint.sh /usr/local/bin/entrypoint.sh
+RUN chmod +x /usr/local/bin/entrypoint.sh
 
-RUN php artisan storage:link || true
+# Permission untuk storage & cache Laravel
+RUN chown -R www-data:www-data /var/www \
+    && chmod -R 775 /var/www/storage /var/www/bootstrap/cache
 
-RUN chown -R www-data:www-data /var/www/storage /var/www/bootstrap/cache
+EXPOSE 80
 
-EXPOSE 9000
-
-CMD ["php-fpm"]
+ENTRYPOINT ["entrypoint.sh"]
+CMD ["/usr/bin/supervisord", "-c", "/etc/supervisor/conf.d/supervisord.conf"]
