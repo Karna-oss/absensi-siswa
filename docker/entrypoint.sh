@@ -1,9 +1,23 @@
 #!/bin/bash
 set -e
 
-echo "==> Menunggu database siap..."
-until php artisan db:show > /dev/null 2>&1; do
-  echo "    DB belum siap, retry dalam 2 detik..."
+echo "==> Menunggu database siap (host: $DB_HOST, port: $DB_PORT, db: $DB_DATABASE)..."
+TRIES=0
+until php -r "
+try {
+    \$pdo = new PDO('mysql:host=' . getenv('DB_HOST') . ';port=' . getenv('DB_PORT') . ';dbname=' . getenv('DB_DATABASE'), getenv('DB_USERNAME'), getenv('DB_PASSWORD'));
+    exit(0);
+} catch (Exception \$e) {
+    fwrite(STDERR, \$e->getMessage() . PHP_EOL);
+    exit(1);
+}
+"; do
+  TRIES=$((TRIES+1))
+  echo "    DB belum siap (percobaan ke-$TRIES), retry dalam 2 detik..."
+  if [ "$TRIES" -ge 15 ]; then
+    echo "==> GAGAL konek setelah $TRIES percobaan. Pesan error terakhir di atas ⬆️"
+    exit 1
+  fi
   sleep 2
 done
 echo "==> Database siap."
@@ -30,3 +44,6 @@ php artisan view:cache
 
 echo "==> Setup selesai, menjalankan proses utama..."
 exec "$@"
+
+
+
